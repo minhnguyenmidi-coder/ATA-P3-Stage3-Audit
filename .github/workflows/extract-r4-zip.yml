@@ -1,0 +1,38 @@
+name: R4 ZIP Extraction Artifact
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: 82b82717def5e97fc3379fdea9f7c5a240fbbcd7
+
+      - name: Extract R4 audit ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="ATA_P3_STAGE3_R4_AUDIT_CORRECTION.zip"
+          test -f "$ZIP"
+          mkdir -p extracted_r4
+          unzip -q "$ZIP" -d extracted_r4
+          find extracted_r4 -type f -print | sort > extracted_r4_filelist.txt
+          sha256sum "$ZIP" > extracted_r4_zip_sha256.txt
+
+      - name: Upload extracted audit bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: R4-extracted-audit-bundle
+          path: |
+            extracted_r4/
+            extracted_r4_filelist.txt
+            extracted_r4_zip_sha256.txt
+          retention-days: 3
